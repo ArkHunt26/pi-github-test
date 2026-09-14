@@ -1,1 +1,1 @@
-print("Version 2\n")
+print("Version 3 - Automatically updated!")
