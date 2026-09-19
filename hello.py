@@ -1,6 +1,6 @@
 import time
 
-print("Version 5 - Application started!")
+print("Version 6 - Application started!")
 
 while True:
     print("Application is running...")
