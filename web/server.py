@@ -46,8 +46,13 @@ def status():
 
     update_available = local != remote
 
+    running = subprocess.run(
+        ["pgrep", "-f", "run_app.sh"],
+        capture_output=True
+    ).returncode == 0
+
     return {
-        "running": False,
+        "running": running,
         "local_commit": local[:7],
         "remote_commit": remote[:7],
         "update_available": update_available
