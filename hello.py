@@ -1,7 +1,7 @@
 import time
 
-print("Version 7 - Application started!")
+print("Version 4 - Automatically updated!")
 
 while True:
-    print("Application is running (v7)...")
+    print("Application is running...")
     time.sleep(5)

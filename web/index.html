@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Pi Control</title>
+    <title>Raspberry Pi Control</title>
 
     <style>
+
         body {
             font-family: Arial, sans-serif;
             background: #f2f2f2;
@@ -12,44 +14,64 @@
         }
 
         .container {
-            max-width: 650px;
+            max-width: 600px;
             margin: auto;
             background: white;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
 
         h1 {
-            margin-top: 0;
+            text-align: center;
+            margin-bottom: 30px;
         }
 
-        .item {
+        .status {
+            background: #f7f7f7;
             padding: 15px;
             margin: 10px 0;
-            background: #f5f5f5;
-            border-radius: 8px;
+            border-radius: 6px;
+            font-size: 18px;
         }
 
-        .label {
-            color: #666;
+        .buttons {
+            margin-top: 25px;
+            text-align: center;
         }
 
         button {
             padding: 12px 20px;
-            margin-top: 15px;
+            margin: 5px;
             border: none;
             border-radius: 6px;
+            font-size: 16px;
             cursor: pointer;
-            font-size: 15px;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        .start {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .update {
+            background: #2196F3;
+            color: white;
         }
 
         #message {
             margin-top: 20px;
+            text-align: center;
             font-weight: bold;
         }
+
     </style>
 </head>
+
 
 <body>
 
@@ -57,33 +79,52 @@
 
     <h1>Raspberry Pi Control</h1>
 
-    <div class="item">
-        <span class="label">Application:</span>
+
+    <div class="status">
+        Application:
         <strong id="appStatus">Checking...</strong>
     </div>
 
-    <div class="item">
-        <span class="label">Local Commit:</span>
+
+    <div class="status">
+        Local Commit:
         <strong id="localCommit">---</strong>
     </div>
 
-    <div class="item">
-        <span class="label">GitHub Commit:</span>
+
+    <div class="status">
+        GitHub Commit:
         <strong id="remoteCommit">---</strong>
     </div>
 
-    <div class="item">
-        <span class="label">GitHub Status:</span>
+
+    <div class="status">
+        GitHub:
         <strong id="updateStatus">Checking...</strong>
     </div>
 
-    <button onclick="startScript()">
-        ▶ Start Script
-    </button>
+
+    <div class="buttons">
+
+        <button
+            class="start"
+            onclick="startScript()">
+            ▶ Start Script
+        </button>
+
+        <button
+            class="update"
+            onclick="updateScript()">
+            🔄 Update from GitHub
+        </button>
+
+    </div>
+
 
     <div id="message"></div>
 
 </div>
+
 
 <script>
 
@@ -92,23 +133,32 @@ async function checkStatus() {
     try {
 
         const response = await fetch("/status");
+
         const data = await response.json();
 
+
+        // Application status
         document.getElementById("appStatus").innerText =
             data.running ? "Running" : "Stopped";
 
+
+        // Git commits
         document.getElementById("localCommit").innerText =
             data.local_commit;
 
         document.getElementById("remoteCommit").innerText =
             data.remote_commit;
 
+
+        // Update status
         document.getElementById("updateStatus").innerText =
             data.update_available
                 ? "⚠ Update Available"
                 : "✓ Up to date";
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         document.getElementById("message").innerText =
             "Unable to connect to server.";
@@ -119,22 +169,104 @@ async function checkStatus() {
 
 async function startScript() {
 
-    const response = await fetch("/start", {
-        method: "POST"
-    });
+    const message =
+        document.getElementById("message");
 
-    const data = await response.json();
+    message.innerText =
+        "Starting application...";
 
-    document.getElementById("message").innerText =
-        data.message;
 
-    checkStatus();
+    try {
+
+        const response = await fetch(
+            "/start",
+            {
+                method: "POST"
+            }
+        );
+
+        const data =
+            await response.json();
+
+
+        message.innerText =
+            data.message;
+
+
+        // Give application a moment to start
+        setTimeout(checkStatus, 1000);
+
+    }
+
+    catch (error) {
+
+        message.innerText =
+            "Failed to start application.";
+
+    }
 }
 
 
+async function updateScript() {
+
+    const message =
+        document.getElementById("message");
+
+    message.innerText =
+        "Updating from GitHub...";
+
+
+    try {
+
+        const response = await fetch(
+            "/update",
+            {
+                method: "POST"
+            }
+        );
+
+        const data =
+            await response.json();
+
+
+        if (data.success) {
+
+            message.innerText =
+                "✓ Update successful.";
+
+        }
+
+        else {
+
+            message.innerText =
+                "✗ Update failed: " + data.error;
+
+        }
+
+
+        // Refresh status
+        setTimeout(checkStatus, 1000);
+
+    }
+
+    catch (error) {
+
+        message.innerText =
+            "Failed to connect to update server.";
+
+    }
+}
+
+
+// Check status when page loads
 checkStatus();
+
+
+// Automatically refresh status every 5 seconds
+setInterval(checkStatus, 5000);
 
 </script>
 
 </body>
+
 </html>
